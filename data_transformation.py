@@ -40,10 +40,10 @@ def transform_data():
     clear_df['Stars'] = stars
     clear_df['Poster_Link'] = excel_data_df['Poster_Link']
 
-    print(clear_df['Certificate'].unique())
+    #print(clear_df['Certificate'].unique())
 
-    database = sqlite3.connect('films_database.db')
-    cur = database.cursor()
+    #database = sqlite3.connect('films_database.db')
+    #cur = database.cursor()
     #cur.execute("CREATE TABLE genres (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL , name TEXT NOT NULL);")
     #for genre in genres:
     #    cur.execute("INSERT INTO genres (name) VALUES (\'" + genre + "\');")
@@ -52,12 +52,12 @@ def transform_data():
     #database.close()
 
 
-    #database = sqlite3.connect('films_database.db')
-    #clear_df.to_sql('films', con=database)
+    database = sqlite3.connect('films_database.db')
+    clear_df.to_sql('films', con=database)
 
 
 
-    return clear_df
+   # return clear_df
 
 
 def create_questions_table():
@@ -130,10 +130,44 @@ def create_options_table():
 
 
 def test():
-    database = sqlite3.connect('questions_database.db')
+    database = sqlite3.connect('films_database.db')
     cur = database.cursor()
-    for row in cur.execute('SELECT * FROM options;'):
-        print(row)
+
+    query = "ALTER TABLE films RENAME TO films_old"
+    cur.execute(query)
+    query = '''CREATE TABLE IF NOT EXISTS films (
+                            id INTEGER PRIMARY KEY NOT NULL,
+                            Title TEXT NOT NULL,
+                            Overview TEXT NOT NULL,
+                            Genres TEXT NOT NULL,
+                            Rating REAL NOT NULL,
+                            Year INTEGER NOT NULL,
+                            Certificate TEXT,
+                            Runtime INTEGER NOT NULL,
+                            Director TEXT NOT NULL,
+                            Stars TEXT NOT NULL,
+                            Poster_Link TEXT NOT NULL
+                            );'''
+    cur.execute(query)
+
+    films = []
+    for film in cur.execute("SELECT * FROM films_old;"):
+        overview = film[2].replace("\"", "\'")
+        films.append([film[0], film[1], overview, film[3], film[4], film[5], film[6], film[7], film[8], film[9], film[10]])
+
+    for film in films:
+        print(film)
+        query = '''INSERT INTO films (Title, Overview, Genres, Rating, Year, Certificate, Runtime, Director, Stars, Poster_Link)
+                            VALUES (\"''' + str(film[1]) + '\",\"' + str(film[2]) + \
+                                    '\",\"' + str(film[3]) + '\",' + str(film[4]) + \
+                                    ',' + str(film[5]) + ',\"' + str(film[6]) + \
+                                    '\",' + str(film[7]) + ',\"' + str(film[8]) + \
+                                    '\",\"' + str(film[9]) + '\",\"' + str(film[10]) + '\");'
+        print(query)
+        cur.execute(query)
+    query = "DROP TABLE IF EXISTS films_old;"
+    cur.execute(query)
+    database.commit()
 
 
 def test1():
@@ -147,5 +181,13 @@ def test1():
     print(id)
     print(questions)
 
+def test2():
+    database = sqlite3.connect('films_database.db')
+    cur = database.cursor()
+    for row in cur.execute('SELECT * FROM films;'):
+        print(row)
+
 #create_options_table()
+transform_data()
 test()
+#test2()

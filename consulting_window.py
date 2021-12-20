@@ -81,7 +81,7 @@ class ConsultingWindow(QWidget):
             else:
                 self.combo.addItem(option[1])
                 self.option_ids.append(option[0])
-        #if self.filtration():
+        self.filtration()
 
 
     def filtration(self):
@@ -90,10 +90,10 @@ class ConsultingWindow(QWidget):
         for film in self.films_cur.execute(self.query):
             count += 1
         print(count)
-        if count == 1:
-            return True
-        else:
-            return False
+        #if count == 1:
+        #    return True
+        #else:
+        #    return False
 
     def open_result_window(self):
         w = ResultWindow()
