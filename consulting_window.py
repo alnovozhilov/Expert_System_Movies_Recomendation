@@ -81,8 +81,8 @@ class ConsultingWindow(QWidget):
             else:
                 self.combo.addItem(option[1])
                 self.option_ids.append(option[0])
-        self.filtration()
-
+        if self.filtration():
+            self.open_result_window()
 
     def filtration(self):
         print(self.query)
@@ -90,13 +90,33 @@ class ConsultingWindow(QWidget):
         for film in self.films_cur.execute(self.query):
             count += 1
         print(count)
-        #if count == 1:
-        #    return True
-        #else:
-        #    return False
+        if count == 1:
+            return True
+        else:
+            return False
 
     def open_result_window(self):
-        w = ResultWindow()
+        database = sqlite3.connect('films_database.db')
+        films_cur = database.cursor()
+        title = ''
+        overview = ''
+        genres = ''
+        rating = 0
+        year = 0
+        director = ''
+        actors = ''
+        poster_url = ''
+
+        for film in films_cur.execute(self.query):
+            title = film[1]
+            overview = film[2]
+            genres = film[3]
+            rating = film[4]
+            year = film[5]
+            director = film[8]
+            actors = film[9]
+            poster_url = film[10]
+        w = ResultWindow(self, title, overview, genres, rating, year, director, actors, poster_url)
         w.show()
 
 
