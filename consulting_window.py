@@ -20,27 +20,53 @@ class ConsultingWindow(QWidget):
         database = sqlite3.connect('questions_database.db')
         self.questions_cur = database.cursor()
 
-        self.textEdit = QTextEdit()
+        self.question_textEdit = QTextEdit()
         self.current_id = 1
-        for question in self.questions_cur.execute('SELECT * FROM questions WHERE id == ' + str(self.current_id) + ';'):
-            self.textEdit.append(question[1])
 
         self.combo = QComboBox()
         self.option_ids = []
-        for option in self.questions_cur.execute('SELECT * FROM options WHERE question_id == ' + str(self.current_id) + ';'):
-            self.combo.addItem(option[1])
-            self.option_ids.append(option[0])
+
         self.btn = QPushButton("Далее")
 
-        main_layout = QVBoxLayout()
+        self.details_label = QLabel("Детали опроса:")
+        self.details_textEdit = QTextEdit()
+        self.restart_button = QPushButton("Начать опрос заново")
+
+        self.details_layout = QVBoxLayout()
+        self.details_layout.addWidget(self.details_label)
+        self.details_layout.addWidget(self.details_textEdit)
+        self.details_layout.addWidget(self.restart_button)
+
         self.answer_layout = QHBoxLayout()
         self.answer_layout.addWidget(self.combo)
         self.answer_layout.addWidget(self.btn)
-        main_layout.addWidget(self.textEdit)
-        main_layout.addLayout(self.answer_layout)
-        self.setLayout(main_layout)
+
+        self.consulting_layout = QVBoxLayout()
+        self.consulting_layout.addWidget(self.question_textEdit)
+        self.consulting_layout.addLayout(self.answer_layout)
+
+        self.main_layout = QHBoxLayout()
+        self.main_layout.addLayout(self.consulting_layout)
+        self.main_layout.addLayout(self.details_layout)
+        self.setLayout(self.main_layout)
+
+        self.init_question()
 
         self.btn.clicked.connect(self.next_question)
+        self.restart_button.clicked.connect(self.init_question)
+
+    def init_question(self):
+        self.question_textEdit.clear()
+        self.combo.clear()
+        self.details_textEdit.clear()
+        self.current_id = 1
+        self.query = "SELECT * FROM films"
+        self.option_ids = []
+        for question in self.questions_cur.execute('SELECT * FROM questions WHERE id == ' + str(self.current_id) + ';'):
+            self.question_textEdit.append(question[1])
+        for option in self.questions_cur.execute('SELECT * FROM options WHERE question_id == ' + str(self.current_id) + ';'):
+            self.combo.addItem(option[1])
+            self.option_ids.append(option[0])
 
     def next_question(self):
         if len(self.option_ids) != 0:
@@ -48,6 +74,7 @@ class ConsultingWindow(QWidget):
         query = "SELECT next_question_id, filter FROM options WHERE id == " + self.option_id + ";"
         for option in self.questions_cur.execute(query):
             if option[0] is None:
+                self.query_formation(option[1])
                 print("end")
             else:
                 self.query_formation(option[1])
@@ -64,9 +91,9 @@ class ConsultingWindow(QWidget):
                 self.query += ' WHERE ' + filter_value
 
     def replace_question(self):
-        self.textEdit.clear()
+        self.question_textEdit.clear()
         for question in self.questions_cur.execute('SELECT * FROM questions WHERE id == ' + str(self.current_id) + ';'):
-            self.textEdit.append(question[1])
+            self.question_textEdit.append(question[1])
         self.option_ids = []
         self.combo.clear()
         for option in self.questions_cur.execute('SELECT * FROM options WHERE question_id == ' + str(self.current_id) + ';'):
@@ -85,13 +112,16 @@ class ConsultingWindow(QWidget):
             self.open_result_window()
 
     def filtration(self):
-        print(self.query)
+        self.details_textEdit.append(self.query)
         count = 0
         for film in self.films_cur.execute(self.query):
             count += 1
-        print(count)
+        self.details_textEdit.append("Фреймов удовлетворяющих ответу: " + str(count))
         if count == 1:
+            self.details_textEdit.append("Найден результат!")
             return True
+        elif count == 0:
+            self.details_textEdit.append("Подходящего к запросу фрейма не найдено")
         else:
             return False
 

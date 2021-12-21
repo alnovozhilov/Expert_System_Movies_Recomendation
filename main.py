@@ -14,7 +14,7 @@ class MainWindow(QWidget):
         self.film_button = QPushButton("Редактировать базу фильмов")
         self.questions_button = QPushButton("Редактировать базу вопросов")
 
-        self.main_layout = QHBoxLayout()
+        self.main_layout = QVBoxLayout()
         self.main_layout.addWidget(self.consulting_button)
         self.main_layout.addWidget(self.film_button)
         self.main_layout.addWidget(self.questions_button)
